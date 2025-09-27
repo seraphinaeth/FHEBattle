@@ -12,7 +12,6 @@ dotenv.config();
 import "solidity-coverage";
 
 import "./tasks/accounts";
-import "./tasks/FHECounter";
 import "./tasks/FHEBattle";
 
 // Run 'npx hardhat vars setup' to see the list of variables that need to be set
@@ -69,7 +68,7 @@ const config: HardhatUserConfig = {
     tests: "./test",
   },
   solidity: {
-    version: "0.8.24",
+    version: "0.8.27",
     settings: {
       metadata: {
         // Not including the metadata hash

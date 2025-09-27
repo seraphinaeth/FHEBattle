@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: BSD-3-Clause-Clear
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.27;
 
-import {FHE, euint32, ebool, externalEuint32} from "@fhevm/solidity/lib/FHE.sol";
+import {FHE, euint64, euint32, ebool, externalEuint32} from "@fhevm/solidity/lib/FHE.sol";
 import {SepoliaConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 interface IConfidentialGold {
-    function mint(address to, euint32 amount) external;
-    function balanceOf(address account) external view returns (euint32);
+    function mint(address to, euint64 amount) external;
+
+    function balanceOf(address account) external view returns (euint64);
 }
 
 /// @title FHE Battle Game
@@ -63,9 +64,9 @@ contract FHEBattle is SepoliaConfig, Ownable {
         FHE.allow(_lastBattleWin[msg.sender], msg.sender);
 
         // Rewards: win => 100 GOLD, lose => 10 GOLD
-        euint32 rWin = FHE.asEuint32(100);
-        euint32 rLose = FHE.asEuint32(10);
-        euint32 reward = FHE.select(win, rWin, rLose);
+        euint64 rWin = FHE.asEuint64(100);
+        euint64 rLose = FHE.asEuint64(10);
+        euint64 reward = FHE.select(win, rWin, rLose);
 
         // Mint rewards to player; this contract must be authorized minter in GOLD
         gold.mint(msg.sender, reward);
@@ -90,4 +91,3 @@ contract FHEBattle is SepoliaConfig, Ownable {
         return _lastBattleWin[player];
     }
 }
-
