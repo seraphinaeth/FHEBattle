@@ -24,20 +24,14 @@ task("battle:register", "Register the caller in FHEBattle")
     console.log(`tx:${tx.hash} status=${receipt?.status}`);
   });
 
-task("battle:attack", "Attack a monster with a clear power (encrypted under the hood)")
-  .addParam("monster", "Monster power as integer")
+task("battle:attack", "Attack a monster without providing input (contract derives it)")
   .addOptionalParam("address", "Optionally specify the FHEBattle address")
   .setAction(async function (args: TaskArguments, hre) {
-    const { ethers, deployments, fhevm } = hre;
-    const monster = parseInt(args.monster);
-    if (!Number.isInteger(monster)) throw new Error("--monster must be an integer");
-
-    await fhevm.initializeCLIApi();
+    const { ethers, deployments } = hre;
     const battleDeployment = args.address ? { address: args.address } : await deployments.get("FHEBattle");
     const signers = await ethers.getSigners();
-    const input = await fhevm.createEncryptedInput(battleDeployment.address, signers[0].address).add32(monster).encrypt();
     const battle = await ethers.getContractAt("FHEBattle", battleDeployment.address);
-    const tx = await battle.connect(signers[0]).attackMonster(input.handles[0], input.inputProof);
+    const tx = await battle.connect(signers[0]).attackMonster();
     console.log(`Wait for tx:${tx.hash}...`);
     const receipt = await tx.wait();
     console.log(`tx:${tx.hash} status=${receipt?.status}`);
@@ -108,16 +102,14 @@ task("battle:simulate", "Deploy locally on hardhat network and run register/atta
     const atk = await fhevm.userDecryptEuint(FhevmType.euint32, encAtk, battleDeployment.address, alice);
     console.log(`Attack=${atk}`);
 
-    // Attack with monster = atk - 1 (win)
-    const encryptedWin = await fhevm.createEncryptedInput(battleDeployment.address, alice.address).add32(Math.max(0, Number(atk - 1n))).encrypt();
-    await (await battle.connect(alice).attackMonster(encryptedWin.handles[0], encryptedWin.inputProof)).wait();
+    // Attack: contract derives monster internally
+    await (await battle.connect(alice).attackMonster()).wait();
     const encGold1 = await gold.confidentialBalanceOf(alice.address);
     const gold1 = await fhevm.userDecryptEuint(FhevmType.euint64, encGold1, goldDeployment.address, alice);
     console.log(`GOLD after win=${gold1}`);
 
-    // Attack with monster = atk + 1 (lose)
-    const encryptedLose = await fhevm.createEncryptedInput(battleDeployment.address, alice.address).add32(Number(atk + 1n)).encrypt();
-    await (await battle.connect(alice).attackMonster(encryptedLose.handles[0], encryptedLose.inputProof)).wait();
+    // Attack again
+    await (await battle.connect(alice).attackMonster()).wait();
     const encGold2 = await gold.confidentialBalanceOf(alice.address);
     const gold2 = await fhevm.userDecryptEuint(FhevmType.euint64, encGold2, goldDeployment.address, alice);
     console.log(`GOLD after lose=${gold2}`);

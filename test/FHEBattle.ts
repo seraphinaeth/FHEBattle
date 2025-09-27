@@ -69,49 +69,32 @@ describe("FHEBattle", function () {
     expect(clearAtk).to.be.lte(100);
   });
 
-  it("attack monster yields win/lose and mint rewards", async function () {
+  it("attack monster yields win/lose and mints rewards without input", async function () {
     // Register Alice
     await (await battle.connect(signers.alice).register()).wait();
 
-    const encAtk = await battle.getAttack(signers.alice.address);
-    const atk = await fhevm.userDecryptEuint(FhevmType.euint32, encAtk, battleAddress, signers.alice);
-
-    // Create encrypted monster power = atk - 1 (ensure win)
-    const encInputWin = await fhevm
-      .createEncryptedInput(battleAddress, signers.alice.address)
-      .add32(Math.max(0, Number(atk - 1n)))
-      .encrypt();
-
-    await (
-      await battle.connect(signers.alice).attackMonster(encInputWin.handles[0], encInputWin.inputProof)
-    ).wait();
+    // Call attack without passing any encrypted input
+    await (await battle.connect(signers.alice).attackMonster()).wait();
 
     const winFlag = await battle.getLastBattleWin(signers.alice.address);
     const clearWin = await fhevm.userDecryptEbool(FhevmType.ebool, winFlag, battleAddress, signers.alice);
     expect(clearWin).to.eq(true);
 
-    // GOLD balance should be 100
+    // GOLD balance should be either 100 (win) or 10 (lose)
     const encBal1 = await gold.balanceOf(signers.alice.address);
     const bal1 = await fhevm.userDecryptEuint(FhevmType.euint64, encBal1, goldAddress, signers.alice);
-    expect(bal1).to.eq(100);
+    expect([10n, 100n]).to.include(bal1);
 
-    // Now lose: monster = atk + 1
-    const looseInput = await fhevm
-      .createEncryptedInput(battleAddress, signers.alice.address)
-      .add32(Number(atk + 1n))
-      .encrypt();
-
-    await (
-      await battle.connect(signers.alice).attackMonster(looseInput.handles[0], looseInput.inputProof)
-    ).wait();
+    // Attack again without input; balance increases by 10 or 100
+    await (await battle.connect(signers.alice).attackMonster()).wait();
 
     const winFlag2 = await battle.getLastBattleWin(signers.alice.address);
     const clearWin2 = await fhevm.userDecryptEbool(FhevmType.ebool, winFlag2, battleAddress, signers.alice);
     expect(clearWin2).to.eq(false);
 
-    // GOLD balance should now be 110 (100 + 10)
+    // GOLD balance should now be one of {20, 110, 200}
     const encBal2 = await gold.balanceOf(signers.alice.address);
     const bal2 = await fhevm.userDecryptEuint(FhevmType.euint64, encBal2, goldAddress, signers.alice);
-    expect(bal2).to.eq(110);
+    expect([20n, 110n, 200n]).to.include(bal2);
   });
 });

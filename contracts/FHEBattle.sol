@@ -41,13 +41,14 @@ contract FHEBattle is SepoliaConfig, Ownable {
         emit PlayerRegistered(msg.sender);
     }
 
-    /// @notice Attack a monster using an encrypted monster power provided by the user
-    /// @param encMonster external encrypted monster power
-    /// @param inputProof input verification proof
-    function attackMonster(externalEuint32 encMonster, bytes calldata inputProof) external {
+    /// @notice Attack a monster without external input. The monster power is derived on-chain.
+    /// @dev Uses pseudo-random clear monster power mapped to [10, 100]. Result remains encrypted.
+    function attackMonster() external {
         require(_registered[msg.sender], "Not registered");
 
-        euint32 monster = FHE.fromExternal(encMonster, inputProof);
+        // Derive a pseudo-random clear monster power in [10,100]
+        uint32 clearMonster = uint32(uint256(keccak256(abi.encodePacked(msg.sender, blockhash(block.number - 1), block.prevrandao)))) % 91 + 10;
+        euint32 monster = FHE.asEuint32(clearMonster);
         euint32 myAtk = _attackPower[msg.sender];
 
         // Win if player's attack >= monster power
