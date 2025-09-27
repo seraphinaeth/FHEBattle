@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useAccount, usePublicClient, useWalletClient } from 'wagmi';
+import { useAccount, usePublicClient } from 'wagmi';
 import { createPublicClient, http } from 'viem';
 import { ethers } from 'ethers';
-import { ZamaRelayer } from '@zama-fhe/relayer-sdk';
 
 import { Header } from './Header';
-import { CONTRACTS, RELAYER, CHAIN } from '../config/contracts-battle';
+import { CONTRACTS, CHAIN } from '../config/contracts-battle';
 import { FHEBattleABI } from '../abi/FHEBattle';
 import { ConfidentialGoldABI } from '../abi/ConfidentialGold';
+import { useEthersSigner } from '../hooks/useEthersSigner';
+import { useZamaInstance } from '../hooks/useZamaInstance';
 
 export function BattleApp() {
   const { address, isConnected } = useAccount();
@@ -17,15 +18,8 @@ export function BattleApp() {
   const [gold, setGold] = useState<string>('-');
   const [lastWin, setLastWin] = useState<string>('-');
   const [monster, setMonster] = useState<string>('50');
-  const { data: walletClient } = useWalletClient();
-
-  const relayer = useMemo(() => new ZamaRelayer({ url: RELAYER.url }), []);
-
-  const ethersSigner = useMemo(() => {
-    if (!walletClient) return null;
-    const provider = new ethers.BrowserProvider((walletClient as any).transport);
-    return provider.getSigner();
-  }, [walletClient]);
+  const ethersSignerPromise = useEthersSigner();
+  const { instance: zama, isLoading: zamaLoading } = useZamaInstance();
 
   const publicClient = useMemo(() => {
     if (wagmiPublic) return wagmiPublic as unknown as ReturnType<typeof createPublicClient>;
@@ -49,18 +43,19 @@ export function BattleApp() {
   };
 
   const decryptHandle = async (handle: string, contract: string) => {
-    if (!address || !ethersSigner) return null;
-    const keypair = relayer.generateKeypair();
+    if (!address || !zama) return null;
+    const signer = await ethersSignerPromise;
+    if (!signer) return null;
+    const keypair = zama.generateKeypair();
     const startTimeStamp = Math.floor(Date.now() / 1000).toString();
     const durationDays = '7';
-    const eip712 = relayer.createEIP712(keypair.publicKey, [contract], startTimeStamp, durationDays);
-    const signer = await ethersSigner;
+    const eip712 = zama.createEIP712(keypair.publicKey, [contract], startTimeStamp, durationDays);
     const signature = await (signer as any).signTypedData(
       eip712.domain,
       { UserDecryptRequestVerification: eip712.types.UserDecryptRequestVerification },
       eip712.message,
     );
-    const result = await relayer.userDecrypt(
+    const result = await zama.userDecrypt(
       [{ handle, contractAddress: contract }],
       keypair.privateKey,
       keypair.publicKey,
@@ -98,8 +93,8 @@ export function BattleApp() {
   }, [isConnected, address]);
 
   const register = async () => {
-    if (!ethersSigner) return;
-    const signer = await ethersSigner;
+    const signer = await ethersSignerPromise;
+    if (!signer) return;
     const contract = new ethers.Contract(CONTRACTS.FHEBattle, FHEBattleABI as any, signer);
     const tx = await contract.register();
     await tx.wait();
@@ -107,9 +102,10 @@ export function BattleApp() {
   };
 
   const attack = async () => {
-    if (!address || !ethersSigner) return;
-    const signer = await ethersSigner;
-    const input = relayer.createEncryptedInput(CONTRACTS.FHEBattle, address);
+    if (!address || !zama) return;
+    const signer = await ethersSignerPromise;
+    if (!signer) return;
+    const input = zama.createEncryptedInput(CONTRACTS.FHEBattle, address);
     input.add32(Number(monster));
     const encrypted = await input.encrypt();
 
@@ -151,4 +147,3 @@ export function BattleApp() {
     </div>
   );
 }
-
