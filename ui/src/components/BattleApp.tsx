@@ -50,31 +50,7 @@ export function BattleApp() {
     return data as `0x${string}`;
   };
 
-  const decryptHandle = async (handle: string, contract: string) => {
-    if (!address || !zama) return null;
-    const signer = await ethersSignerPromise;
-    if (!signer) return null;
-    const keypair = zama.generateKeypair();
-    const startTimeStamp = Math.floor(Date.now() / 1000).toString();
-    const durationDays = '7';
-    const eip712 = zama.createEIP712(keypair.publicKey, [contract], startTimeStamp, durationDays);
-    const signature = await (signer as any).signTypedData(
-      eip712.domain,
-      { UserDecryptRequestVerification: eip712.types.UserDecryptRequestVerification },
-      eip712.message,
-    );
-    const result = await zama.userDecrypt(
-      [{ handle, contractAddress: contract }],
-      keypair.privateKey,
-      keypair.publicKey,
-      (signature as string).replace('0x', ''),
-      [contract],
-      address,
-      startTimeStamp,
-      durationDays,
-    );
-    return result[handle] as number | boolean;
-  };
+  // Single-call batch decrypt is implemented in decryptAll()
 
   const isAllZeroCiphertext = (data?: `0x${string}` | null) => {
     if (!data) return false;
@@ -112,27 +88,80 @@ export function BattleApp() {
   };
 
   const decryptAll = async () => {
-    if (!address) return;
-    // Attack
-    if (isAllZeroCiphertext(encAtk)) {
-      setAtk('0');
-    } else if (encAtk) {
-      const v = await decryptHandle(encAtk, CONTRACTS.FHEBattle);
-      if (typeof v === 'number') setAtk(String(v));
-    }
-    // Last win
-    if (isAllZeroCiphertext(encWin)) {
-      setLastWin('0');
-    } else if (encWin) {
-      const v = await decryptHandle(encWin, CONTRACTS.FHEBattle);
-      if (typeof v === 'boolean') setLastWin(v ? 'Win' : 'Lose');
-    }
-    // Gold
-    if (isAllZeroCiphertext(encGold)) {
-      setGold('0');
-    } else if (encGold) {
-      const v = await decryptHandle(encGold, CONTRACTS.ConfidentialGold);
-      if (typeof v === 'number') setGold(String(v));
+    if (!address || !zama) return;
+    const signer = await ethersSignerPromise;
+    if (!signer) return;
+
+    try {
+      setTxError(null);
+      type Item = { handle: string; contractAddress: string };
+      const items: Item[] = [];
+
+      // Prepare batch and handle zero-ciphertexts immediately
+      if (encAtk) {
+        if (isAllZeroCiphertext(encAtk)) {
+          setAtk('0');
+        } else {
+          items.push({ handle: encAtk, contractAddress: CONTRACTS.FHEBattle });
+        }
+      }
+      if (encWin) {
+        if (isAllZeroCiphertext(encWin)) {
+          setLastWin('0');
+        } else {
+          items.push({ handle: encWin, contractAddress: CONTRACTS.FHEBattle });
+        }
+      }
+      if (encGold) {
+        if (isAllZeroCiphertext(encGold)) {
+          setGold('0');
+        } else {
+          items.push({ handle: encGold, contractAddress: CONTRACTS.ConfidentialGold });
+        }
+      }
+
+      if (items.length === 0) return;
+
+      const keypair = zama.generateKeypair();
+      const startTimeStamp = Math.floor(Date.now() / 1000).toString();
+      const durationDays = '7';
+      const contracts = Array.from(new Set(items.map((i) => i.contractAddress)));
+      const eip712 = zama.createEIP712(keypair.publicKey, contracts, startTimeStamp, durationDays);
+      const signature = await (signer as any).signTypedData(
+        eip712.domain,
+        { UserDecryptRequestVerification: eip712.types.UserDecryptRequestVerification },
+        eip712.message,
+      );
+
+      const result = await zama.userDecrypt(
+        items,
+        keypair.privateKey,
+        keypair.publicKey,
+        (signature as string).replace('0x', ''),
+        contracts,
+        address,
+        startTimeStamp,
+        durationDays,
+      );
+
+      // Map results
+      if (encAtk && result[encAtk] !== undefined) {
+        const v = result[encAtk] as number | string;
+        if (typeof v === 'number' || typeof v === 'string') setAtk(String(v));
+      }
+      if (encWin && result[encWin] !== undefined) {
+        const v = result[encWin] as boolean | string | number;
+        if (typeof v === 'boolean') setLastWin(v ? 'Win' : 'Lose');
+        // If relayer encodes boolean as string/number, fall back to truthy check
+        else setLastWin(v ? 'Win' : 'Lose');
+      }
+      if (encGold && result[encGold] !== undefined) {
+        const v = result[encGold] as number | string;
+        if (typeof v === 'number' || typeof v === 'string') setGold(String(v));
+      }
+    } catch (e: any) {
+      const msg: string = e?.message || String(e);
+      setTxError(`Decryption failed: ${msg}`);
     }
   };
 
@@ -188,7 +217,9 @@ export function BattleApp() {
           <p>GOLD: {gold}</p>
           <p>Status: {registered ? 'Registered' : 'Not Registered'}</p>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={register}>Register</button>
+            {!registered ? (
+              <button onClick={register}>Register</button>
+            ) : null}
             <button onClick={refresh}>Refresh</button>
             <button onClick={decryptAll} disabled={!zama || zamaLoading}>
               Decrypt
