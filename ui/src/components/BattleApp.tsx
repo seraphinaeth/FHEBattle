@@ -4,7 +4,6 @@ import { useAccount, usePublicClient } from 'wagmi';
 import { createPublicClient, http } from 'viem';
 import { ethers } from 'ethers';
 
-import { Header } from './Header';
 import { CONTRACTS, CHAIN } from '../config/contracts-battle';
 import { FHEBattleABI } from '../abi/FHEBattle';
 import { ConfidentialGoldABI } from '../abi/ConfidentialGold';
@@ -38,7 +37,12 @@ export function BattleApp() {
 
   const goldRead = async () => {
     if (!address) return null;
-    const data = await publicClient.readContract({ abi: ConfidentialGoldABI as any, address: CONTRACTS.ConfidentialGold as `0x${string}`, functionName: 'balanceOf', args: [address as `0x${string}`] });
+    const data = await publicClient.readContract({
+      abi: ConfidentialGoldABI as any,
+      address: CONTRACTS.ConfidentialGold as `0x${string}`,
+      functionName: 'confidentialBalanceOf',
+      args: [address as `0x${string}`],
+    });
     return data as `0x${string}`;
   };
 
@@ -117,7 +121,6 @@ export function BattleApp() {
 
   return (
     <div className="app">
-      <Header />
       <main className="main-content">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <h2 style={{ margin: 0 }}>FHE Battle</h2>
