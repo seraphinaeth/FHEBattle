@@ -1,0 +1,79 @@
+import { FhevmType } from "@fhevm/hardhat-plugin";
+import { task } from "hardhat/config";
+import type { TaskArguments } from "hardhat/types";
+
+task("battle:address", "Prints the FHEBattle and ConfidentialGold addresses").setAction(async function (_: TaskArguments, hre) {
+  const { deployments } = hre;
+  const battle = await deployments.get("FHEBattle");
+  const gold = await deployments.get("ConfidentialGold");
+  console.log(`FHEBattle: ${battle.address}`);
+  console.log(`ConfidentialGold: ${gold.address}`);
+});
+
+task("battle:register", "Register the caller in FHEBattle")
+  .addOptionalParam("address", "Optionally specify the FHEBattle address")
+  .setAction(async function (args: TaskArguments, hre) {
+    const { ethers, deployments } = hre;
+    const battleDeployment = args.address ? { address: args.address } : await deployments.get("FHEBattle");
+    const signers = await ethers.getSigners();
+    const battle = await ethers.getContractAt("FHEBattle", battleDeployment.address);
+    const tx = await battle.connect(signers[0]).register();
+    console.log(`Wait for tx:${tx.hash}...`);
+    const receipt = await tx.wait();
+    console.log(`tx:${tx.hash} status=${receipt?.status}`);
+  });
+
+task("battle:attack", "Attack a monster with a clear power (encrypted under the hood)")
+  .addParam("monster", "Monster power as integer")
+  .addOptionalParam("address", "Optionally specify the FHEBattle address")
+  .setAction(async function (args: TaskArguments, hre) {
+    const { ethers, deployments, fhevm } = hre;
+    const monster = parseInt(args.monster);
+    if (!Number.isInteger(monster)) throw new Error("--monster must be an integer");
+
+    await fhevm.initializeCLIApi();
+    const battleDeployment = args.address ? { address: args.address } : await deployments.get("FHEBattle");
+    const signers = await ethers.getSigners();
+    const input = await fhevm.createEncryptedInput(battleDeployment.address, signers[0].address).add32(monster).encrypt();
+    const battle = await ethers.getContractAt("FHEBattle", battleDeployment.address);
+    const tx = await battle.connect(signers[0]).attackMonster(input.handles[0], input.inputProof);
+    console.log(`Wait for tx:${tx.hash}...`);
+    const receipt = await tx.wait();
+    console.log(`tx:${tx.hash} status=${receipt?.status}`);
+  });
+
+task("battle:decrypt", "Decrypt player attack, last result, and GOLD balance")
+  .addOptionalParam("battle", "FHEBattle address")
+  .addOptionalParam("gold", "ConfidentialGold address")
+  .setAction(async function (args: TaskArguments, hre) {
+    const { ethers, deployments, fhevm } = hre;
+    await fhevm.initializeCLIApi();
+    const battleDeployment = args.battle ? { address: args.battle } : await deployments.get("FHEBattle");
+    const goldDeployment = args.gold ? { address: args.gold } : await deployments.get("ConfidentialGold");
+    const signers = await ethers.getSigners();
+
+    const battle = await ethers.getContractAt("FHEBattle", battleDeployment.address);
+    const gold = await ethers.getContractAt("ConfidentialGold", goldDeployment.address);
+
+    const encAtk = await battle.getAttack(signers[0].address);
+    console.log(`enc attack: ${encAtk}`);
+    if (encAtk !== ethers.ZeroHash) {
+      const atk = await fhevm.userDecryptEuint(FhevmType.euint32, encAtk, battleDeployment.address, signers[0]);
+      console.log(`attack     : ${atk}`);
+    }
+
+    const encRes = await battle.getLastBattleWin(signers[0].address);
+    console.log(`enc result : ${encRes}`);
+    if (encRes !== ethers.ZeroHash) {
+      const res = await fhevm.userDecryptEbool(FhevmType.ebool, encRes, battleDeployment.address, signers[0]);
+      console.log(`result     : ${res ? "Win" : "Lose"}`);
+    }
+
+    const encBal = await gold.balanceOf(signers[0].address);
+    console.log(`enc GOLD   : ${encBal}`);
+    if (encBal !== ethers.ZeroHash) {
+      const bal = await fhevm.userDecryptEuint(FhevmType.euint32, encBal, goldDeployment.address, signers[0]);
+      console.log(`GOLD       : ${bal}`);
+    }
+  });
+
