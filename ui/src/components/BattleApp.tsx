@@ -9,6 +9,7 @@ import { FHEBattleABI } from '../abi/FHEBattle';
 import { ConfidentialGoldABI } from '../abi/ConfidentialGold';
 import { useEthersSigner } from '../hooks/useEthersSigner';
 import { useZamaInstance } from '../hooks/useZamaInstance';
+import './BattleApp.css';
 
 export function BattleApp() {
   const { address, isConnected } = useAccount();
@@ -207,52 +208,118 @@ export function BattleApp() {
   };
 
   return (
-    <div className="app">
-      <main className="main-content">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-          <h2 style={{ margin: 0 }}>FHE Battle</h2>
+    <div className="battle-app">
+      <main className="battle-main">
+        {/* Header Section */}
+        <div className="battle-header">
+          <h1 className="battle-title">⚔️ FHE BATTLE</h1>
           <ConnectButton />
         </div>
-        <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 16, background: '#fff', marginBottom: 12 }}>
-          <h3>Player</h3>
-          <p>Attack: {atk}</p>
-          <p>Last Result: {lastWin}</p>
-          <p>GOLD: {gold}</p>
-          <p>Status: {registered ? 'Registered' : 'Not Registered'}</p>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {!registered ? (
-              <button onClick={register}>Register</button>
-            ) : null}
-            <button onClick={refresh}>Refresh</button>
-            <button onClick={decryptAll} disabled={!zama || zamaLoading}>
-              Decrypt
+
+        {/* Player Information Card */}
+        <div className="battle-card player-card">
+          <h2 className="card-title">🛡️ Player Statistics</h2>
+
+          <div className="player-stats">
+            <div className="stat-item">
+              <div className="stat-label">Attack Power</div>
+              <div className={`stat-value attack ${atk === '***' ? 'encrypted' : ''}`}>
+                {atk === '***' ? '🔒 Encrypted' : `⚔️ ${atk}`}
+              </div>
+            </div>
+
+            <div className="stat-item">
+              <div className="stat-label">Last Battle</div>
+              <div className={`stat-value ${
+                lastWin === 'Win' ? 'result-win' :
+                lastWin === 'Lose' ? 'result-lose' :
+                'encrypted'
+              }`}>
+                {lastWin === '***' ? '🔒 Encrypted' :
+                 lastWin === 'Win' ? '🏆 Victory' :
+                 lastWin === 'Lose' ? '💀 Defeat' : lastWin}
+              </div>
+            </div>
+
+            <div className="stat-item">
+              <div className="stat-label">Gold Balance</div>
+              <div className={`stat-value gold ${gold === '***' ? 'encrypted' : ''}`}>
+                {gold === '***' ? '🔒 Encrypted' : `💰 ${gold}`}
+              </div>
+            </div>
+
+            <div className="stat-item">
+              <div className="stat-label">Registration</div>
+              <div className={`status-indicator ${registered ? 'status-registered' : 'status-unregistered'}`}>
+                {registered ? '✅ Registered' : '❌ Unregistered'}
+              </div>
+            </div>
+          </div>
+
+          <div className="button-group">
+            {!registered && (
+              <button
+                className="battle-button button-primary"
+                onClick={register}
+                disabled={!isConnected}
+              >
+                🎮 Register
+              </button>
+            )}
+
+            <button
+              className="battle-button button-secondary"
+              onClick={refresh}
+              disabled={!isConnected}
+            >
+              🔄 Refresh
+            </button>
+
+            <button
+              className={`battle-button ${
+                encAtk || encWin || encGold ? 'button-success' : 'button-secondary'
+              }`}
+              onClick={decryptAll}
+              disabled={!zama || zamaLoading || !isConnected}
+            >
+              {zamaLoading ? '⏳ Loading...' : '🔓 Decrypt'}
             </button>
           </div>
-          {txError ? (
-            <p style={{ color: '#b91c1c', marginTop: 8 }}>{txError}</p>
-          ) : null}
-        </div>
-        <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 16, background: '#fff' }}>
-          <h3>Attack Monster</h3>
-          <div>Attack monster to earn GOLD</div>
-          {registered ? (
-            <button style={{ marginTop: 8 }} onClick={attack}>
-              Attack
-            </button>
-          ) : (
-            <button
-              style={{
-                marginTop: 8,
-                cursor: 'not-allowed',
-                background: '#f3f4f6',
-                color: '#6b7280',
-                border: '1px solid #d1d5db',
-              }}
-              disabled
-            >
-              Please register first
-            </button>
+
+          {txError && (
+            <div className="error-message">
+              {txError}
+            </div>
           )}
+        </div>
+
+        {/* Monster Battle Card */}
+        <div className="battle-card monster-card">
+          <h2 className="card-title">🐉 Monster Arena</h2>
+
+          <div className="monster-description">
+            Enter the arena and face fierce monsters! Each battle tests your courage and skill.
+            Victory rewards you with precious GOLD, but defeat teaches valuable lessons.
+          </div>
+
+          <div className="button-group">
+            {registered ? (
+              <button
+                className="battle-button button-danger"
+                onClick={attack}
+                disabled={!isConnected}
+              >
+                ⚔️ Attack Monster
+              </button>
+            ) : (
+              <button
+                className="battle-button button-disabled"
+                disabled
+              >
+                🔒 Register First
+              </button>
+            )}
+          </div>
         </div>
       </main>
     </div>

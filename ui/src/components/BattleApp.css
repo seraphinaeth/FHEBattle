@@ -1,0 +1,674 @@
+/* BattleApp - Modern Gaming Theme */
+
+.battle-app {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f0f23 0%, #1a1a3a 50%, #2d1b69 100%);
+  color: #ffffff;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.battle-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Header Section */
+.battle-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.battle-title {
+  font-size: 3rem;
+  font-weight: 900;
+  background: linear-gradient(45deg, #60a5fa, #a78bfa, #f472b6);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 30px rgba(168, 85, 247, 0.5);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+/* Card Components */
+.battle-card {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 24px;
+  padding: 2.5rem;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.battle-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+}
+
+.battle-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(168, 85, 247, 0.3);
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(168, 85, 247, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.player-card {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.monster-card {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(245, 101, 101, 0.1) 100%);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+/* Typography */
+.card-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 1.5rem 0;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.card-title::before {
+  content: '';
+  width: 4px;
+  height: 24px;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  border-radius: 2px;
+}
+
+/* Player Stats */
+.player-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stat-value.encrypted {
+  color: #fbbf24;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+}
+
+.stat-value.attack {
+  color: #f87171;
+}
+
+.stat-value.gold {
+  color: #fbbf24;
+}
+
+.stat-value.result-win {
+  color: #34d399;
+}
+
+.stat-value.result-lose {
+  color: #f87171;
+}
+
+/* Status Indicators */
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-registered {
+  background: rgba(34, 197, 94, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.status-unregistered {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-indicator::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse 2s infinite;
+}
+
+/* Buttons */
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.battle-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  font-family: inherit;
+  position: relative;
+  overflow: hidden;
+  min-width: 140px;
+  justify-content: center;
+}
+
+.battle-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.battle-button:hover::before {
+  left: 100%;
+}
+
+.button-primary {
+  background: linear-gradient(135deg, #8b5cf6, #a855f7);
+  color: white;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+}
+
+.button-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.6);
+}
+
+.button-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.button-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.button-success {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+}
+
+.button-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.6);
+}
+
+.button-danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+}
+
+.button-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(239, 68, 68, 0.6);
+}
+
+.button-disabled {
+  background: rgba(107, 114, 128, 0.3);
+  color: #6b7280;
+  cursor: not-allowed;
+  border: 1px solid rgba(107, 114, 128, 0.2);
+}
+
+.button-disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Error Messages */
+.error-message {
+  margin-top: 1.5rem;
+  padding: 1rem 1.5rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 12px;
+  color: #fca5a5;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.error-message::before {
+  content: '⚠️';
+  font-size: 1.25rem;
+}
+
+/* Monster Section */
+.monster-description {
+  font-size: 1.125rem;
+  color: #cbd5e1;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+/* Loading States */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+  position: relative;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(139, 92, 246, 0.6);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .battle-main {
+    padding: 1rem;
+    gap: 1.5rem;
+  }
+
+  .battle-header {
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 1.5rem;
+  }
+
+  .battle-title {
+    font-size: 2rem;
+  }
+
+  .battle-card {
+    padding: 1.5rem;
+  }
+
+  .player-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .button-group {
+    flex-direction: column;
+  }
+
+  .battle-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .battle-title {
+    font-size: 1.5rem;
+  }
+
+  .card-title {
+    font-size: 1.5rem;
+  }
+
+  .battle-card {
+    padding: 1rem;
+  }
+}
+
+/* Rainbow Kit Override for Dark Theme */
+.battle-app [data-rk] {
+  color: inherit;
+}
+
+/* Advanced Visual Enhancements */
+
+/* Floating particles background effect */
+.battle-app::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image:
+    radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+  animation: float 20s ease-in-out infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translate(0px, 0px) rotate(0deg);
+  }
+  33% {
+    transform: translate(30px, -30px) rotate(120deg);
+  }
+  66% {
+    transform: translate(-20px, 20px) rotate(240deg);
+  }
+}
+
+/* Enhanced card hover effects */
+.battle-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.02), transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+  pointer-events: none;
+}
+
+.battle-card:hover::after {
+  transform: translateX(100%);
+}
+
+/* Glowing effect for the title */
+.battle-title {
+  animation: titleGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes titleGlow {
+  from {
+    filter: drop-shadow(0 0 20px rgba(168, 85, 247, 0.5));
+  }
+  to {
+    filter: drop-shadow(0 0 40px rgba(168, 85, 247, 0.8));
+  }
+}
+
+/* Stat value animations */
+.stat-value {
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.stat-value:not(.encrypted):hover {
+  transform: scale(1.05);
+  text-shadow: 0 0 10px currentColor;
+}
+
+/* Enhanced button interactions */
+.battle-button {
+  transform-style: preserve-3d;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.battle-button:hover:not(.button-disabled) {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.battle-button:active:not(.button-disabled) {
+  transform: translateY(0px) scale(0.98);
+}
+
+/* Shimmer effect for encrypted values */
+.stat-value.encrypted {
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(251, 191, 36, 0.2),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Pulsing animation for status indicators */
+.status-indicator {
+  animation: statusPulse 2s ease-in-out infinite;
+}
+
+@keyframes statusPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(currentColor, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(currentColor, 0);
+  }
+}
+
+/* Enhanced error message with slide-in animation */
+.error-message {
+  animation: slideIn 0.3s ease-out;
+  transform-origin: top;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scaleY(0);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+  }
+}
+
+/* Card entrance animations */
+.battle-card {
+  animation: cardEntrance 0.6s ease-out forwards;
+}
+
+.player-card {
+  animation-delay: 0.1s;
+}
+
+.monster-card {
+  animation-delay: 0.2s;
+}
+
+@keyframes cardEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Header animation */
+.battle-header {
+  animation: headerEntrance 0.8s ease-out;
+}
+
+@keyframes headerEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Magical sparkle effect for successful actions */
+.button-success:hover {
+  box-shadow:
+    0 8px 25px rgba(16, 185, 129, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  animation: sparkle 0.6s ease;
+}
+
+@keyframes sparkle {
+  0%, 100% { transform: translateY(-2px) scale(1.02); }
+  50% { transform: translateY(-4px) scale(1.04); }
+}
+
+/* Battle button special effects */
+.button-danger:hover {
+  box-shadow:
+    0 8px 25px rgba(239, 68, 68, 0.6),
+    0 0 0 1px rgba(239, 68, 68, 0.2);
+  animation: battlePulse 0.4s ease;
+}
+
+@keyframes battlePulse {
+  0%, 100% {
+    transform: translateY(-2px) scale(1.02);
+    filter: hue-rotate(0deg);
+  }
+  50% {
+    transform: translateY(-4px) scale(1.04);
+    filter: hue-rotate(10deg);
+  }
+}
+
+/* Loading state enhancements */
+.battle-button.loading {
+  animation: buttonLoading 1s ease-in-out infinite;
+}
+
+@keyframes buttonLoading {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+/* Scroll reveal animations */
+@media (prefers-reduced-motion: no-preference) {
+  .battle-main > * {
+    animation-fill-mode: both;
+  }
+}
+
+/* Enhanced responsive animations */
+@media (max-width: 768px) {
+  .battle-card::after {
+    display: none; /* Disable sweep effect on mobile for performance */
+  }
+
+  .battle-app::before {
+    animation: none; /* Disable floating particles on mobile */
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .battle-card {
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+
+  .battle-title {
+    animation: none;
+    color: #ffffff;
+    background: none;
+  }
+}
