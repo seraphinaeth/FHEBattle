@@ -13,9 +13,9 @@ import { useZamaInstance } from '../hooks/useZamaInstance';
 export function BattleApp() {
   const { address, isConnected } = useAccount();
   const wagmiPublic = usePublicClient();
-  const [atk, setAtk] = useState<string>('-');
-  const [gold, setGold] = useState<string>('-');
-  const [lastWin, setLastWin] = useState<string>('-');
+  const [atk, setAtk] = useState<string>('***');
+  const [gold, setGold] = useState<string>('***');
+  const [lastWin, setLastWin] = useState<string>('***');
   const [encAtk, setEncAtk] = useState<`0x${string}` | null>(null);
   const [encWin, setEncWin] = useState<`0x${string}` | null>(null);
   const [encGold, setEncGold] = useState<`0x${string}` | null>(null);
@@ -64,9 +64,9 @@ export function BattleApp() {
   const refresh = async () => {
     if (!isConnected || !address) return;
     setTxError(null);
-    setAtk('-');
-    setGold('-');
-    setLastWin('-');
+    setAtk('***');
+    setGold('***');
+    setLastWin('***');
     // registration status
     try {
       const r = (await publicClient.readContract({
@@ -96,7 +96,8 @@ export function BattleApp() {
       setTxError(null);
       type Item = { handle: string; contractAddress: string };
       const items: Item[] = [];
-
+      console.log("decryptAll:",encAtk,encGold,encWin);
+      
       // Prepare batch and handle zero-ciphertexts immediately
       if (encAtk) {
         if (isAllZeroCiphertext(encAtk)) {
@@ -143,11 +144,13 @@ export function BattleApp() {
         startTimeStamp,
         durationDays,
       );
-
+      console.log("decryptAll result:",result);
+      
       // Map results
       if (encAtk && result[encAtk] !== undefined) {
-        const v = result[encAtk] as number | string;
-        if (typeof v === 'number' || typeof v === 'string') setAtk(String(v));
+        const v = result[encAtk];
+        console.log("attack:",v);
+        setAtk(String(v));
       }
       if (encWin && result[encWin] !== undefined) {
         const v = result[encWin] as boolean | string | number;
@@ -156,8 +159,8 @@ export function BattleApp() {
         else setLastWin(v ? 'Win' : 'Lose');
       }
       if (encGold && result[encGold] !== undefined) {
-        const v = result[encGold] as number | string;
-        if (typeof v === 'number' || typeof v === 'string') setGold(String(v));
+        const v = result[encGold];
+        setGold(String(v));
       }
     } catch (e: any) {
       const msg: string = e?.message || String(e);
@@ -231,10 +234,25 @@ export function BattleApp() {
         </div>
         <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 16, background: '#fff' }}>
           <h3>Attack Monster</h3>
-          <div>Monster power is chosen by contract</div>
-          <button style={{ marginTop: 8 }} onClick={attack} disabled={!registered}>
-            Attack
-          </button>
+          <div>Attack monster to earn GOLD</div>
+          {registered ? (
+            <button style={{ marginTop: 8 }} onClick={attack}>
+              Attack
+            </button>
+          ) : (
+            <button
+              style={{
+                marginTop: 8,
+                cursor: 'not-allowed',
+                background: '#f3f4f6',
+                color: '#6b7280',
+                border: '1px solid #d1d5db',
+              }}
+              disabled
+            >
+              Please register first
+            </button>
+          )}
         </div>
       </main>
     </div>
