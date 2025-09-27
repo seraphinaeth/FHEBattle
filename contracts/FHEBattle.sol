@@ -27,9 +27,9 @@ contract FHEBattle is SepoliaConfig, Ownable {
     function register() external {
         require(!_registered[msg.sender], "Already registered");
 
-        // random in [0, 90], then add 10 => [10,100]
-        euint32 base = FHE.randEuint32(91);
-        euint32 atk = FHE.add(base, 10);
+        // Pseudo-random value based on user and recent block, mapped to [10,100]
+        uint32 clear = uint32(uint256(keccak256(abi.encodePacked(msg.sender, blockhash(block.number - 1))))) % 91 + 10;
+        euint32 atk = FHE.asEuint32(clear);
 
         _attackPower[msg.sender] = atk;
 
@@ -62,6 +62,9 @@ contract FHEBattle is SepoliaConfig, Ownable {
         euint64 rWin = FHE.asEuint64(100);
         euint64 rLose = FHE.asEuint64(10);
         euint64 reward = FHE.select(win, rWin, rLose);
+
+        // Allow GOLD contract to consume this encrypted amount
+        FHE.allowTransient(reward, address(gold));
 
         // Mint rewards to player; this contract must be authorized minter in GOLD
         gold.mint(msg.sender, reward);

@@ -84,6 +84,12 @@
     "deploy:sepolia": "hardhat deploy --network sepolia",
     "copy-abi:sepolia": "ts-node scripts/copy-abi.ts sepolia",
     "deploy:sepolia:full": "hardhat deploy --network sepolia && npm run copy-abi:sepolia",
+    "node:local": "hardhat node",
+    "deploy:local": "hardhat deploy --network localhost",
+    "task:battle:address:local": "hardhat battle:address --network localhost",
+    "task:battle:register:local": "hardhat battle:register --network localhost",
+    "task:battle:attack:local": "hardhat battle:attack --monster 42 --network localhost",
+    "task:battle:decrypt:local": "hardhat battle:decrypt --network localhost",
     "frontend:dev": "cd ui && npm run dev",
     "setup:sepolia": "echo 'Please follow the steps in deploy-sepolia.md'"
   },
