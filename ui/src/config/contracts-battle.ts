@@ -1,7 +1,7 @@
 // Fill with Sepolia addresses after deployment
 export const CONTRACTS = {
-  FHEBattle: '0xd1F43800400327aedeF1750652bdaa7c5CAc24fC',
-  ConfidentialGold: '0x41FdD92E85F6d51e31De3D3De6AB8523A558d5b5',
+  FHEBattle: '0x5B11032FcC53700a272BE2d887334e067Fe7776D',
+  ConfidentialGold: '0x2b424dD864B72D1d50D82045b1A4428C4f612a62',
 } as const;
 
 export const RELAYER = {

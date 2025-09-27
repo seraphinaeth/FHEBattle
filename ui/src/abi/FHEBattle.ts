@@ -69,10 +69,7 @@ export const FHEBattleABI = [
     type: 'function',
   },
   {
-    inputs: [
-      { internalType: 'bytes32', name: 'encMonster', type: 'bytes32' },
-      { internalType: 'bytes', name: 'inputProof', type: 'bytes' },
-    ],
+    inputs: [],
     name: 'attackMonster',
     outputs: [],
     stateMutability: 'nonpayable',
