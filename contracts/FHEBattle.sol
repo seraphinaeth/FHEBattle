@@ -4,17 +4,12 @@ pragma solidity ^0.8.27;
 import {FHE, euint64, euint32, ebool, externalEuint32} from "@fhevm/solidity/lib/FHE.sol";
 import {SepoliaConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-
-interface IConfidentialGold {
-    function mint(address to, euint64 amount) external;
-
-    function balanceOf(address account) external view returns (euint64);
-}
+import {ConfidentialGold} from "./ConfidentialGold.sol";
 
 /// @title FHE Battle Game
 /// @notice Players register to receive an encrypted attack power. They can battle monsters and receive confidential GOLD rewards.
 contract FHEBattle is SepoliaConfig, Ownable {
-    IConfidentialGold public immutable gold;
+    ConfidentialGold public immutable gold;
 
     mapping(address => euint32) private _attackPower;
     mapping(address => ebool) private _lastBattleWin;
@@ -25,7 +20,7 @@ contract FHEBattle is SepoliaConfig, Ownable {
 
     constructor(address goldToken) Ownable(msg.sender) {
         require(goldToken != address(0), "Invalid GOLD token");
-        gold = IConfidentialGold(goldToken);
+        gold = ConfidentialGold(goldToken);
     }
 
     /// @notice Register and receive an encrypted attack power in [10, 100]

@@ -92,7 +92,7 @@ describe("FHEBattle", function () {
 
     // GOLD balance should be 100
     const encBal1 = await gold.balanceOf(signers.alice.address);
-    const bal1 = await fhevm.userDecryptEuint(FhevmType.euint32, encBal1, goldAddress, signers.alice);
+    const bal1 = await fhevm.userDecryptEuint(FhevmType.euint64, encBal1, goldAddress, signers.alice);
     expect(bal1).to.eq(100);
 
     // Now lose: monster = atk + 1
@@ -111,8 +111,7 @@ describe("FHEBattle", function () {
 
     // GOLD balance should now be 110 (100 + 10)
     const encBal2 = await gold.balanceOf(signers.alice.address);
-    const bal2 = await fhevm.userDecryptEuint(FhevmType.euint32, encBal2, goldAddress, signers.alice);
+    const bal2 = await fhevm.userDecryptEuint(FhevmType.euint64, encBal2, goldAddress, signers.alice);
     expect(bal2).to.eq(110);
   });
 });
-
