@@ -16,7 +16,9 @@ export function BattleApp() {
   const [atk, setAtk] = useState<string>('-');
   const [gold, setGold] = useState<string>('-');
   const [lastWin, setLastWin] = useState<string>('-');
-  const [monster, setMonster] = useState<string>('50');
+  const [encAtk, setEncAtk] = useState<`0x${string}` | null>(null);
+  const [encWin, setEncWin] = useState<`0x${string}` | null>(null);
+  const [encGold, setEncGold] = useState<`0x${string}` | null>(null);
   const ethersSignerPromise = useEthersSigner();
   const { instance: zama, isLoading: zamaLoading } = useZamaInstance();
 
@@ -72,26 +74,55 @@ export function BattleApp() {
     return result[handle] as number | boolean;
   };
 
+  const isAllZeroCiphertext = (data?: `0x${string}` | null) => {
+    if (!data) return false;
+    const hex = data.toLowerCase();
+    if (!hex.startsWith('0x')) return false;
+    const body = hex.slice(2);
+    if (body.length === 0) return false;
+    return /^0+$/.test(body);
+  };
+
   const refresh = async () => {
     if (!isConnected || !address) return;
-    const encAtk = await battleRead('getAttack');
-    if (encAtk) {
+    setAtk('-');
+    setGold('-');
+    setLastWin('-');
+    const a = await battleRead('getAttack');
+    setEncAtk(a ?? null);
+    const w = await battleRead('getLastBattleWin');
+    setEncWin(w ?? null);
+    const g = await goldRead();
+    setEncGold(g ?? null);
+  };
+
+  const decryptAll = async () => {
+    if (!address) return;
+    // Attack
+    if (isAllZeroCiphertext(encAtk)) {
+      setAtk('0');
+    } else if (encAtk) {
       const v = await decryptHandle(encAtk, CONTRACTS.FHEBattle);
       if (typeof v === 'number') setAtk(String(v));
     }
-    const encWin = await battleRead('getLastBattleWin');
-    if (encWin) {
+    // Last win
+    if (isAllZeroCiphertext(encWin)) {
+      setLastWin('0');
+    } else if (encWin) {
       const v = await decryptHandle(encWin, CONTRACTS.FHEBattle);
       if (typeof v === 'boolean') setLastWin(v ? 'Win' : 'Lose');
     }
-    const encGold = await goldRead();
-    if (encGold) {
+    // Gold
+    if (isAllZeroCiphertext(encGold)) {
+      setGold('0');
+    } else if (encGold) {
       const v = await decryptHandle(encGold, CONTRACTS.ConfidentialGold);
       if (typeof v === 'number') setGold(String(v));
     }
   };
 
   useEffect(() => {
+    // Load encrypted values only; do not decrypt automatically
     refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, address]);
@@ -102,19 +133,16 @@ export function BattleApp() {
     const contract = new ethers.Contract(CONTRACTS.FHEBattle, FHEBattleABI as any, signer);
     const tx = await contract.register();
     await tx.wait();
+    // After registration, only refresh encrypted values; do not auto-decrypt
     await refresh();
   };
 
   const attack = async () => {
-    if (!address || !zama) return;
+    if (!address) return;
     const signer = await ethersSignerPromise;
     if (!signer) return;
-    const input = zama.createEncryptedInput(CONTRACTS.FHEBattle, address);
-    input.add32(Number(monster));
-    const encrypted = await input.encrypt();
-
     const contract = new ethers.Contract(CONTRACTS.FHEBattle, FHEBattleABI as any, signer);
-    const tx = await contract.attackMonster(encrypted.handles[0], encrypted.inputProof);
+    const tx = await contract.attackMonster();
     await tx.wait();
     await refresh();
   };
@@ -134,14 +162,14 @@ export function BattleApp() {
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={register}>Register</button>
             <button onClick={refresh}>Refresh</button>
+            <button onClick={decryptAll} disabled={!zama || zamaLoading}>
+              Decrypt
+            </button>
           </div>
         </div>
         <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 16, background: '#fff' }}>
           <h3>Attack Monster</h3>
-          <div>
-            <label>Monster Power </label>
-            <input value={monster} onChange={(e) => setMonster(e.target.value)} style={{ width: 120 }} />
-          </div>
+          <div>Monster power is chosen by contract</div>
           <button style={{ marginTop: 8 }} onClick={attack}>
             Attack
           </button>
