@@ -1,7 +1,7 @@
 {
-  "name": "fhevm-hardhat-template",
+  "name": "fhebattle",
   "description": "Hardhat-based template for developing FHEVM Solidity smart contracts",
-  "version": "0.0.1",
+  "version": "0.1.1",
   "engines": {
     "node": ">=20",
     "npm": ">=7.0.0"
